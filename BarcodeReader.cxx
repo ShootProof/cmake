@@ -124,14 +124,12 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 		return -1;
 	}
 
-	printf("Total barcode(s) found: %d. Time cost: %d ms\n\n", paryResult->resultsCount, timecost);
-
-	// for (int index = 0; index < paryResult->resultsCount; index++)
-	// {
-	// 	printf("Barcode %d:\n", index + 1);
-	// 	printf("    Type: %s\n", paryResult->results[index]->barcodeFormatString);
-	// 	printf("    Text: %s\n", paryResult->results[index]->barcodeText);
-	// }
+	// Since more than one barcode can be scanned, the results set is an array.
+	for (int iIndex = 0; iIndex < paryResult->resultsCount; iIndex++)
+	{
+		// Print only the decoded text
+		printf("%s", paryResult->results[iIndex]->barcodeText);
+	}
 
 	CBarcodeReader::FreeTextResults(&paryResult);
 	return timecost;
@@ -179,11 +177,6 @@ void multi_thread_performance(int processor_count, unsigned char *buffer, int si
 
 int main(int argc, const char* argv[])
 {
-	const int processor_count = 1;
-	printf("CPU threads: %d\n\n", processor_count);
-	printf("Barcode Reader Version %d.%d\n\n",
-	BarcodeReader_VERSION_MAJOR, BarcodeReader_VERSION_MINOR);
-
 	if (argc < 3) {
 		printf("Usage: BarcodeReader [image-file] [license-file] [optional: template-file] \n");
 		return 0;
@@ -208,18 +201,7 @@ int main(int argc, const char* argv[])
 	unsigned char* buffer = read_file_binary(argv[1], &size);
 	if (!buffer) return 0;
 
-
-	// Call decoding methods on the main thread
-	printf("---------------- Single thread decoding performance ----------------\n\n");
-	printf("---------------- Decoding barcodes on main thread ----------------\n\n");
-	// barcode_decoding(buffer, size, BF_ONED, 1, license, config);
-	// barcode_decoding(buffer, size, BF_CODE_39, 1, license, config);
-
 	barcode_decoding(buffer, size, BF_QR_CODE, 1, license, config);
-	barcode_decoding(buffer, size, BF_PDF417, 1, license, config);
-	barcode_decoding(buffer, size, BF_DATAMATRIX, 1, license, config);
-	barcode_decoding(buffer, size, BF_DATAMATRIX | BF_QR_CODE | BF_PDF417, 1, license, config);
-	// barcode_decoding(buffer, size, BF_ALL, 1, license, config);
 
 	free(license);
 	free(config);
