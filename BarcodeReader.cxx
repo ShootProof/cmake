@@ -61,19 +61,11 @@ unsigned char * read_file_binary(const char* filename, int* out_size) {
 	return buffer;
 }
 
-int barcode_decoding(const unsigned char* buffer, int size, int formats, int threadcount, char* license, char* config)
+int barcode_decoding(const unsigned char* buffer, int size, int formats, char* license)
 {
 	// Initialize Dynamsoft Barcode Reader
 	CBarcodeReader reader;
 	reader.InitLicense(license);
-
-	// Load the configuration from a template file
-	if (config)
-	{
-		char szErrorMsg[256];
-		int ret = reader.InitRuntimeSettingsWithString(config, CM_OVERWRITE, szErrorMsg, 256);
-		if (ret) printf("Template status: %s\n\n", szErrorMsg);
-	}
 
 	// Update the parameters
 	char sError[512];
@@ -119,23 +111,17 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 int main(int argc, const char* argv[])
 {
 	if (argc < 3) {
-		printf("Usage: BarcodeReader [image-file] [license-file] [optional: template-file] \n");
+		printf("Usage: BarcodeReader [image-file] [license-file]\n");
 		return 0;
 	}
 
 	char* license = NULL;
-	char* config =  NULL;
 
 	// Read the license and exit with code 2 if it's invalid
 	license = read_file_text(argv[2]);
 	if (license == NULL) {
 		printf("License is null\n");
 		return 1;
-	}
-
-	switch(argc) {
-		case 4:
-		config = read_file_text(argv[3]);
 	}
 
 	int size = 0;
@@ -147,10 +133,9 @@ int main(int argc, const char* argv[])
 	}
 
 	int exitCode = 0;
-	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, 1, license, config);
+	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, 1, license);
 
 	free(license);
-	free(config);
 	free(buffer);
 
 	return exitCode;
