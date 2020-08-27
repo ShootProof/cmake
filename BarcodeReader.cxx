@@ -92,7 +92,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 		iRet != DBRERR_1D_LICENSE_INVALID && iRet != DBRERR_PDF417_LICENSE_INVALID && iRet != DBRERR_DATAMATRIX_LICENSE_INVALID && iRet != DBRERR_GS1_DATABAR_LICENSE_INVALID && iRet != DBRERR_PATCHCODE_LICENSE_INVALID)
 	{
 		printf("Failed to read barcode: %s\n", CBarcodeReader::GetErrorString(iRet));
-		// return 0;
+		return 1;
 	}
 
 	TextResultArray *paryResult = NULL;
@@ -102,7 +102,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 	{
 		printf("No barcode found.\n");
 		CBarcodeReader::FreeTextResults(&paryResult);
-		return -1;
+		return 4;
 	}
 
 	// Since more than one barcode can be scanned, the results set is an array.
@@ -113,6 +113,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 	}
 
 	CBarcodeReader::FreeTextResults(&paryResult);
+	return 0;
 }
 
 int main(int argc, const char* argv[])
@@ -129,7 +130,7 @@ int main(int argc, const char* argv[])
 	license = read_file_text(argv[2]);
 	if (license == NULL) {
 		printf("License is null\n");
-		return 2;
+		return 1;
 	}
 
 	switch(argc) {
@@ -138,8 +139,12 @@ int main(int argc, const char* argv[])
 	}
 
 	int size = 0;
-	unsigned char* buffer = read_file_binary(argv[1], &size);
-	if (!buffer) return 0;
+	unsigned char* buffer = NULL;
+	buffer = read_file_binary(argv[1], &size);
+	if (buffer == NULL) {
+		printf("Image is null\n");
+		return 1;
+	}
 
 	int exitCode = 0;
 	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, 1, license, config);
