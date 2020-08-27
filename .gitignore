@@ -3,3 +3,10 @@
 /platforms/win/*.dll
 /platforms/win/*.lib
 *.so
+BarcodeReaderConfig.h
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+DartConfiguration.tcl
+Makefile
+cmake_install.cmake
