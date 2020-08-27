@@ -67,11 +67,12 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, char* l
 	CBarcodeReader reader;
 	reader.InitLicense(license);
 
-	// Update the parameters
+	// Get and update settings
 	char sError[512];
 	PublicRuntimeSettings* runtimeSettings = new PublicRuntimeSettings();
 	reader.GetRuntimeSettings(runtimeSettings);
-	runtimeSettings->maxAlgorithmThreadCount = threadcount;
+	// Four is the defalt value here, we can experiment with timing and adjust as needed
+	runtimeSettings->maxAlgorithmThreadCount = 4;
 	runtimeSettings->barcodeFormatIds = formats;
 	reader.UpdateRuntimeSettings(runtimeSettings, sError, 512);
 	delete runtimeSettings;
@@ -112,7 +113,7 @@ int main(int argc, const char* argv[])
 {
 	if (argc < 3) {
 		printf("Usage: BarcodeReader [image-file] [license-file]\n");
-		return 0;
+		return 2;
 	}
 
 	char* license = NULL;
@@ -133,7 +134,7 @@ int main(int argc, const char* argv[])
 	}
 
 	int exitCode = 0;
-	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, 1, license);
+	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, license);
 
 	free(license);
 	free(buffer);
