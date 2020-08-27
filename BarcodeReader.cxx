@@ -4,7 +4,6 @@
 #include "BarcodeReaderConfig.h"
 #include <iostream>
 #include <fstream>
-#include <thread>
 
 using namespace std;
 
@@ -80,8 +79,6 @@ unsigned char * read_file_binary(const char* filename, int* out_size) {
 
 int barcode_decoding(const unsigned char* buffer, int size, int formats, int threadcount, char* license, char* config)
 {
-	std::thread::id thread_id = std::this_thread::get_id();
-
 	// Initialize Dynamsoft Barcode Reader
 	CBarcodeReader reader;
 	if (license) {reader.InitLicense (license);}
@@ -127,7 +124,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 		return -1;
 	}
 
-	printf("Thread id: %d. Total barcode(s) found: %d. Time cost: %d ms\n\n", thread_id, paryResult->resultsCount, timecost);
+	printf("Total barcode(s) found: %d. Time cost: %d ms\n\n", paryResult->resultsCount, timecost);
 
 	// for (int index = 0; index < paryResult->resultsCount; index++)
 	// {
@@ -182,7 +179,7 @@ void multi_thread_performance(int processor_count, unsigned char *buffer, int si
 
 int main(int argc, const char* argv[])
 {
-	const auto processor_count = std::thread::hardware_concurrency();
+	const int processor_count = 1;
 	printf("CPU threads: %d\n\n", processor_count);
 	printf("Barcode Reader Version %d.%d\n\n",
 	BarcodeReader_VERSION_MAJOR, BarcodeReader_VERSION_MINOR);
@@ -217,31 +214,6 @@ int main(int argc, const char* argv[])
 	barcode_decoding(buffer, size, BF_DATAMATRIX, 1, license, config);
 	barcode_decoding(buffer, size, BF_DATAMATRIX | BF_QR_CODE | BF_PDF417, 1, license, config);
 	// barcode_decoding(buffer, size, BF_ALL, 1, license, config);
-
-	// Call decoding methods on worker threads
-	printf("---------------- Decoding barcodes on worker threads ----------------\n\n");
-	int starttime = gettime();
-	// thread t1(barcode_decoding, buffer, size, BF_ONED);
-	thread t2(barcode_decoding, buffer, size, BF_QR_CODE, 1, license, config);
-	thread t3(barcode_decoding, buffer, size, BF_PDF417, 1, license, config);
-	thread t4(barcode_decoding, buffer, size, BF_DATAMATRIX, 1, license, config);
-	// t1.join();
-	t2.join();
-	t3.join();
-	t4.join();
-	int endtime = gettime();
-	printf("Thread time cost: %d ms\n\n", (endtime - starttime));
-
-	printf("---------------- Multi thread decoding performance ----------------\n\n");
-	// 1D
-	printf("-------------------------------- 1D --------------------------------\n\n");
-	multi_thread_performance((int)processor_count, buffer, size, BF_ONED, license, config);
-	// QR
-	printf("-------------------------------- QR --------------------------------\n\n");
-	multi_thread_performance((int)processor_count, buffer, size, BF_QR_CODE, license, config);
-	// All
-	printf("-------------------------------- All --------------------------------\n\n");
-	multi_thread_performance((int)processor_count, buffer, size, BF_ALL, license, config);
 
 	free(license);
 	free(config);
