@@ -7,22 +7,6 @@
 
 using namespace std;
 
-#if defined(LINUX) || defined(MACOS)
-	#include <sys/time.h>
-
-int gettime()
-{
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	return (int)(time.tv_sec * 1000 * 1000 +  time.tv_usec) / 1000;
-}
-#else
-int gettime()
-{
-	return (int)(GetTickCount());
-}
-#endif
-
 char* read_file_text(const char* filename) {
 	FILE *fp = fopen(filename, "r");
 	size_t size;
@@ -101,10 +85,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 	delete runtimeSettings;
 
 	// Read barcodes from file stream
-	int starttime = gettime();
 	int iRet = reader.DecodeFileInMemory(buffer, (int)size, "");
-	int endtime = gettime();
-	int timecost = endtime - starttime;
 
 	// Output barcode result
 	if (iRet != DBR_OK && iRet != DBRERR_MAXICODE_LICENSE_INVALID && iRet != DBRERR_AZTEC_LICENSE_INVALID && iRet != DBRERR_LICENSE_EXPIRED && iRet != DBRERR_QR_LICENSE_INVALID && iRet != DBRERR_GS1_COMPOSITE_LICENSE_INVALID &&
@@ -132,47 +113,6 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 	}
 
 	CBarcodeReader::FreeTextResults(&paryResult);
-	return timecost;
-}
-
-void ToHexString(unsigned char* pSrc, int iLen, char* pDest)
-{
-	const char HEXCHARS[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-	int i;
-	char* ptr = pDest;
-
-	for(i = 0; i < iLen; ++i)
-	{
-		snprintf(ptr, 4, "%c%c ", HEXCHARS[ ( pSrc[i] & 0xF0 ) >> 4 ], HEXCHARS[ ( pSrc[i] & 0x0F ) >> 0 ]);
-		ptr += 3;
-	}
-}
-
-void multi_thread_performance(int processor_count, unsigned char *buffer, int size, int formats, char* license, char* config)
-{
-	int minimum_count = 1, minimum_timecost = 0;
-	for (int i = 0; i < processor_count; i++)
-	{
-		printf("Thread count: %d. ", i + 1);
-		int timecost = barcode_decoding(buffer, size, formats, i, license, config);
-		if (i == 0)
-		{
-			minimum_count = 1;
-			if (timecost > 0)
-			{
-				minimum_timecost = timecost;
-			}
-		}
-		else {
-			if (timecost < minimum_timecost)
-			{
-				minimum_count = i + 1;
-				minimum_timecost = timecost;
-			}
-		}
-	}
-	printf("Multi-thread best performance: thread_count = %d, timecost = %d \n\n", minimum_count, minimum_timecost);
 }
 
 int main(int argc, const char* argv[])
@@ -201,11 +141,12 @@ int main(int argc, const char* argv[])
 	unsigned char* buffer = read_file_binary(argv[1], &size);
 	if (!buffer) return 0;
 
-	barcode_decoding(buffer, size, BF_QR_CODE, 1, license, config);
+	int exitCode = 0;
+	exitCode = barcode_decoding(buffer, size, BF_QR_CODE, 1, license, config);
 
 	free(license);
 	free(config);
 	free(buffer);
 
-	return 0;
+	return exitCode;
 }
