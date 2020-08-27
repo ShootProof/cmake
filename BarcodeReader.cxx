@@ -81,7 +81,7 @@ int barcode_decoding(const unsigned char* buffer, int size, int formats, int thr
 {
 	// Initialize Dynamsoft Barcode Reader
 	CBarcodeReader reader;
-	if (license) {reader.InitLicense (license);}
+	reader.InitLicense(license);
 
 	// Load the configuration from a template file
 	if (config)
@@ -184,18 +184,24 @@ int main(int argc, const char* argv[])
 	printf("Barcode Reader Version %d.%d\n\n",
 	BarcodeReader_VERSION_MAJOR, BarcodeReader_VERSION_MINOR);
 
-	if (argc < 2) {
-		printf("Usage: BarcodeReader [image-file] [optional: license-file] [optional: template-file] \n");
+	if (argc < 3) {
+		printf("Usage: BarcodeReader [image-file] [license-file] [optional: template-file] \n");
 		return 0;
 	}
 
 	char* license = NULL;
 	char* config =  NULL;
+
+	// Read the license and exit with code 2 if it's invalid
+	license = read_file_text(argv[2]);
+	if (license == NULL) {
+		printf("License is null\n");
+		return 2;
+	}
+
 	switch(argc) {
 		case 4:
 		config = read_file_text(argv[3]);
-		case 3:
-		license = read_file_text(argv[2]);
 	}
 
 	int size = 0;
